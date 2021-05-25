@@ -19,6 +19,10 @@ module.exports.getUserById = (req, res) => {
       res.status(200).send(user);
     })
     .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Переданы некорректные данные при поиске' });
+        return;
+      }
       res.status(500).message({ message: err.message });
     });
 };
@@ -31,7 +35,7 @@ module.exports.createUser = (req, res) => {
       res.status(200).send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
         return;
       }
@@ -50,7 +54,7 @@ module.exports.updateUser = (req, res) => {
       res.status(200).send(updatedUser);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
         return;
       }
@@ -69,7 +73,7 @@ module.exports.updateAvatar = (req, res) => {
       res.status(200).send(updatedUser);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
         return;
       }
