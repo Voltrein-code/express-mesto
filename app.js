@@ -1,6 +1,10 @@
 const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
+const { login, createUser } = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const ForbiddenError = require('./errors/forbidden-error');
+const { validateSignIn, validateSignUp, validateRoutesWithAuth } = require('./middlewares/request-validation');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -15,19 +19,23 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '60a66a4cb0564ccd6e49f4ee',
-  };
+app.post('/signin', validateSignIn, login);
+app.post('/signup', validateSignUp, createUser);
 
+app.use('/users', validateRoutesWithAuth, auth, require('./routes/users'));
+app.use('/cards', validateRoutesWithAuth, auth, require('./routes/cards'));
+
+app.use('*', (req, res, next) => next(new ForbiddenError('Запрашиваемый ресурс не найден')));
+
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
+
+  res.status(statusCode).send({
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
+  });
   next();
-});
-
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
