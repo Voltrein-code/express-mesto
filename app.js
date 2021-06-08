@@ -1,10 +1,10 @@
-const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
-const ForbiddenError = require('./errors/forbidden-error');
 const { validateSignIn, validateSignUp, validateRoutesWithAuth } = require('./middlewares/request-validation');
+const NotFoundError = require('./errors/not-found-error');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -25,8 +25,9 @@ app.post('/signup', validateSignUp, createUser);
 app.use('/users', validateRoutesWithAuth, auth, require('./routes/users'));
 app.use('/cards', validateRoutesWithAuth, auth, require('./routes/cards'));
 
-app.use('*', (req, res, next) => next(new ForbiddenError('Запрашиваемый ресурс не найден')));
+app.use('*', (req, res, next) => next(new NotFoundError('Запрашиваемый ресурс не найден')));
 
+app.use(errors());
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
@@ -38,7 +39,6 @@ app.use((err, req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);

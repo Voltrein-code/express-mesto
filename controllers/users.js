@@ -55,7 +55,7 @@ module.exports.createUser = (req, res, next) => {
         name, about, avatar, email, password: hash,
       })
         .then((user) => {
-          res.status(200).send(user);
+          res.status(200).send(Object.assign(user, { password: undefined }));
         })
         .catch((err) => {
           if (err.name === 'ValidationError') {
